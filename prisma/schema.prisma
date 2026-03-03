@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String         @id @default(uuid())
+  email          String         @unique
+  password       String
+  name           String?
+  avatarUrl      String?
+  pairId         String?
+  pair           Pair?          @relation("PairMembership", fields: [pairId], references: [id])
+  hostedPair     Pair?          @relation("PairHost")
+
+  todos          Todo[]
+  reminders      Reminder[]
+  sentHearts     HeartEvent[]   @relation("sentHearts")
+  receivedHearts HeartEvent[]   @relation("receivedHearts")
+  notifications  Notification[]
+  refreshTokens  RefreshToken[]
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Todo {
+  id        String   @id @default(uuid())
+  title     String
+  date      DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Reminder {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  title       String
+  description String?
+  remindAt    DateTime
+  repeat      String?   // none|daily|weekly|monthly
+  meta        Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model HeartEvent {
+  id         String   @id @default(uuid())
+  sender     User     @relation("sentHearts", fields: [senderId], references: [id])
+  senderId   String
+  receiver   User     @relation("receivedHearts", fields: [receiverId], references: [id])
+  receiverId String
+  message    String?
+  createdAt  DateTime @default(now())
+  @@index([senderId, receiverId])
+}
+
+enum NotificationType {
+  HEART
+  REMINDER
+  SYSTEM
+  OTHER
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  user       User             @relation(fields: [userId], references: [id])
+  userId     String
+  type       NotificationType
+  title      String
+  body       String
+  meta       Json?
+  read       Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+  @@index([userId, read])
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  tokenHash  String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  @@index([userId])
+}
+
+model Pair {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  host       User     @relation("PairHost", fields: [hostId], references: [id])
+  hostId     String  @unique
+  users      User[]   @relation("PairMembership")
+  createdAt  DateTime @default(now())
+}

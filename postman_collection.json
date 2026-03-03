@@ -1,0 +1,260 @@
+{
+  "info": {
+    "name": "Fluple Backend API",
+    "_postman_id": "fluple-backend-collection",
+    "description": "Postman collection for Fluple backend (use {{baseUrl}} variable)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "const token = pm.environment.get('accessToken');",
+          "if (token) {",
+          "  pm.request.headers.upsert({ key: 'Authorization', value: `Bearer ${token}` });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Alice\",\n  \"email\": \"alice@example.com\",\n  \"password\": \"secretpass\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"secretpass\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data) {",
+                  "  pm.environment.set('accessToken', json.data.accessToken || '');",
+                  "  pm.environment.set('refreshToken', json.data.refreshToken || '');",
+                  "}",
+                  "pm.test('saved tokens', function () { pm.expect(json).to.have.property('data'); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api","auth","me"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api","auth","refresh"] },
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pairing",
+      "item": [
+        {
+          "name": "Generate Invite Code",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/pair/generate", "host": ["{{baseUrl}}"], "path": ["api","pair","generate"] }
+          }
+        },
+        {
+          "name": "Join By Code",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/pair/join", "host": ["{{baseUrl}}"], "path": ["api","pair","join"] },
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"INVITE123\"\n}" }
+          }
+        },
+        {
+          "name": "Get Pair",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/pair", "host": ["{{baseUrl}}"], "path": ["api","pair"] }
+          }
+        },
+        {
+          "name": "Unpair",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/pair/unpair", "host": ["{{baseUrl}}"], "path": ["api","pair","unpair"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Todos",
+      "item": [
+        {
+          "name": "Create Todo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/todos", "host": ["{{baseUrl}}"], "path": ["api","todos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Buy coffee\",\n  \"date\": \"2026-03-03T00:00:00.000Z\"\n}" }
+          }
+        },
+        {
+          "name": "Get Todos By Date",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/todos?date=2026-03-03", "host": ["{{baseUrl}}"], "path": ["api","todos"], "query": [{ "key": "date", "value": "2026-03-03" }] }
+          }
+        },
+        {
+          "name": "Update Todo",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/todos/:id", "host": ["{{baseUrl}}"], "path": ["api","todos",":id"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Buy coffee and croissant\",\n  \"completed\": true\n}" }
+          }
+        },
+        {
+          "name": "Delete Todo",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/todos/:id", "host": ["{{baseUrl}}"], "path": ["api","todos",":id"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reminders",
+      "item": [
+        {
+          "name": "Create Reminder",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/reminders", "host": ["{{baseUrl}}"], "path": ["api","reminders"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Anniversary\",\n  \"description\": \"Send flowers\",\n  \"remindAt\": \"2026-03-04T09:00:00.000Z\"\n}" }
+          }
+        },
+        {
+          "name": "Get Reminders (today|tomorrow|week)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reminders?filter=today", "host": ["{{baseUrl}}"], "path": ["api","reminders"], "query": [{ "key": "filter", "value": "today" }] }
+          }
+        },
+        {
+          "name": "Update Reminder",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/reminders/:id", "host": ["{{baseUrl}}"], "path": ["api","reminders",":id"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Anniversary updated\"\n}" }
+          }
+        },
+        {
+          "name": "Delete Reminder",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/reminders/:id", "host": ["{{baseUrl}}"], "path": ["api","reminders",":id"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Heart",
+      "item": [
+        {
+          "name": "Send Heart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/heart", "host": ["{{baseUrl}}"], "path": ["api","heart"] },
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Lagi kangen\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notifications", "host": ["{{baseUrl}}"], "path": ["api","notifications"] }
+          }
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notifications/:id/read", "host": ["{{baseUrl}}"], "path": ["api","notifications",":id","read"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tracking",
+      "item": [
+        {
+          "name": "Create Tracking",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/tracking", "host": ["{{baseUrl}}"], "path": ["api","tracking"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"Working\",\n  \"note\": \"In a meeting\"\n}" }
+          }
+        },
+        {
+          "name": "Get Tracking",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/tracking", "host": ["{{baseUrl}}"], "path": ["api","tracking"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ]
+}

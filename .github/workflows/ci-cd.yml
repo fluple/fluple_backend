@@ -26,13 +26,13 @@ jobs:
       - name: Generate Prisma client
         run: npm run prisma:generate
         env:
-          DATABASE_URL: postgresql://user:password@localhost:5432/fluple?schema=public
+          DATABASE_URL: postgresql://postgres@localhost:5432/fluple?schema=public
       - name: Typecheck
         run: npx tsc --noEmit
 
   deploy:
     needs: ci
-    if: github.ref == 'refs/heads/main' && secrets.DEPLOY_WEBHOOK_URL != ''
+    if: ${{ github.ref == 'refs/heads/main' && secrets.DEPLOY_WEBHOOK_URL != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deploy hook
